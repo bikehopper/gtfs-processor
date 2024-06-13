@@ -6,10 +6,13 @@ import('gtfs-to-geojson').then((gtfsToGeoJSON) => {
   const agencies = [
     {
       agency_key: 'RG',
+      // Input GTFS file path
       path: path.join(__dirname, '../gtfs/GTFSTransitData_RG.zip'),
     }
   ];
-  const outputGeojsonPath = path.join(__dirname, '../geojson/RG/RG.geojson');
+
+  // This is a hardcoded temp geojson file thats an intermediary
+  const outputGeojsonPath = path.join(process.cwd(), '/geojson/RG/RG.geojson');
   
   const options = {
     layerName: 'layer0',
@@ -38,5 +41,7 @@ import('gtfs-to-geojson').then((gtfsToGeoJSON) => {
   console.log('geojson generated');
   const geojson = JSON.parse(fs.readFileSync(outputGeojsonPath, {encoding: 'utf-8'}));
   debugger;
+
+  // /tiles output director gets generated at cwd
   geojson2mvt(geojson, options);
 });
