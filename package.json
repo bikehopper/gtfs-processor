@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node -r dotenv/config ./src/generateLocalTransitBounds.js",
-    "test": "vitest"
+    "test": "vitest",
+    "test-page": "st -co -nc -l"
   },
   "author": "",
   "license": "ISC",
@@ -15,7 +16,10 @@
     "@turf/center-of-mass": "^6.5.0",
     "@turf/convex": "^6.5.0",
     "csv-parse": "^5.5.0",
+    "geojson2mvt": "^0.0.4",
     "gtfs": "^4.5.0",
+    "gtfs-to-geojson": "^3.6.1",
+    "st": "^3.0.0",
     "unzipper": "^0.10.14"
   },
   "devDependencies": {
