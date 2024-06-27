@@ -44,13 +44,25 @@
       });
 
       map.addLayer({
-        'id': 'route-stops',
+        'id': 'route-stops1',
         'source-layer': 'layer0',
         'type': 'circle',
         'source': 'routes-tiles',
         'filter': ['==', ['geometry-type'], 'Point'],
         'paint': {
-          'circle-radius': 5,
+          'circle-radius': 6,
+          'circle-color': 'black',
+        }
+      });
+
+      map.addLayer({
+        'id': 'route-stops2',
+        'source-layer': 'layer0',
+        'type': 'circle',
+        'source': 'routes-tiles',
+        'filter': ['==', ['geometry-type'], 'Point'],
+        'paint': {
+          'circle-radius': 4,
           'circle-color': 'white',
         }
       });
