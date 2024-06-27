@@ -36,9 +36,22 @@
         'source-layer': 'layer0',
         'type': 'line',
         'source': 'routes-tiles',
+        'filter': ['==', ['geometry-type'], 'LineString'],
         'paint': {
           'line-width': 3,
           'line-color': ['get', 'route_color']
+        }
+      });
+
+      map.addLayer({
+        'id': 'route-stops',
+        'source-layer': 'layer0',
+        'type': 'circle',
+        'source': 'routes-tiles',
+        'filter': ['==', ['geometry-type'], 'Point'],
+        'paint': {
+          'circle-radius': 5,
+          'circle-color': 'white',
         }
       });
     });
