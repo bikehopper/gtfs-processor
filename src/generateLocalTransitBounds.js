@@ -1,29 +1,17 @@
-const { createReadStream, createWriteStream } = require('node:fs');
-const { writeFile, mkdtemp, rm } = require('node:fs/promises');
+const { createReadStream } = require('node:fs');
+const { writeFile, mkdtemp } = require('node:fs/promises');
 const turfConvex = require('@turf/convex').default;
 const turfBuffer = require('@turf/buffer');
 const turfCenterOfMass = require('@turf/center-of-mass').default;
 const bbox = require('@turf/bbox').default;
 const unzipper = require("unzipper");
-const { resolve, join, basename} = require("path");
+const { resolve, join } = require("path");
 const { tmpdir } = require('node:os');
-const { filterRouteIds, filterTripIds, getInterestingStopIds, getInterestingStopsAsGeoJsonPoints } = require('./gtfs-helpers');
+const { filterRouteIds, filterTripIds, getInterestingStopIds, getInterestingStopsAsGeoJsonPoints, unzipGtfs } = require('./gtfs-helpers');
 
 const requiredGTFSFiles = new Set(['routes.txt', 'trips.txt', 'stop_times.txt', 'stops.txt']);
 const ENV_FILTERED_AGENCY_IDS = process.env.FILTERED_AGENCY_IDS || '';
 const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS || '';
-
-async function unzip(src, dest) {
-  const zip = createReadStream(src).pipe(unzipper.Parse({forceStream: true}));
-  for await (const entry of zip) {
-    const fileName = basename(entry.path);
-    if (requiredGTFSFiles.has(fileName)) {
-      entry.pipe(createWriteStream(join(dest, fileName)));
-    } else {
-      entry.autodrain();
-    }
-  }
-}
 
 (async () => {
   // computes a polygon to define the "transit service area"
@@ -39,7 +27,7 @@ async function unzip(src, dest) {
   const gtfsOutputPath =  await mkdtemp(join(tmpdir(), 'gtfs-'));
 
   // decompress GTFS zip
-  await unzip(gtfsFilePath, gtfsOutputPath);
+  await unzipGtfs(gtfsFilePath, gtfsOutputPath, requiredGTFSFiles);
 
   // Bay Area: we want to filter out stops only served by ACE and Capitol
   // Corridor JPA since they go far outside the area we have local transit for

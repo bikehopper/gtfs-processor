@@ -3,6 +3,8 @@ const fs = require('fs');
 const geojson2mvt = require('geojson2mvt');
 const bbox = require('@turf/bbox').default;
 const turf = require('@turf/helpers');
+const { tmpdir } = require('node:os');
+const { unzipGtfs } = require('./gtfs-helpers');
 
 const agencies = [
   {
@@ -43,14 +45,14 @@ function flattenStopRoutes(geojson) {
 const lineClippingDict = {};
 
 (async () => {
-  const gtfsToGeoJSON = await import('gtfs-to-geojson');
+  // const gtfsToGeoJSON = await import('gtfs-to-geojson');
   
-  await gtfsToGeoJSON.default({
-    agencies,
-    outputType: 'agency',
-    outputFormat: 'lines-and-stops',
-    ignoreDuplicates: true,
-  });
+  // await gtfsToGeoJSON.default({
+  //   agencies,
+  //   outputType: 'agency',
+  //   outputFormat: 'lines-and-stops',
+  //   ignoreDuplicates: true,
+  // });
 
   console.log('geojson generated');
 
@@ -77,5 +79,19 @@ const lineClippingDict = {};
   };
 
   // /tiles output director gets generated at cwd
-  geojson2mvt(geojson, options);
+  // geojson2mvt(geojson, options);
+
+  // /dicts 
+  const rootDir = path.join(process.cwd(), '/dicts/');
+  const linesStringsPath = path.join(rootDir, 'routeIdLineStringDict.json');
+  const stopIdLocationsPath = path.join(rootDir, 'stopIdPointsDict.json');
+
+  const gtfsOutputPath =  await mkdtemp(path.join(tmpdir(), 'gtfs-'));
+  await unzipGtfs(agencies[0].path, gtfsOutputPath, new Set(['stop_times.txt']));
+
+  if(!fs.existsSync(rootDir)){
+    fs.mkdirSync(rootDir);
+  }
+  fs.writeFileSync(linesStringsPath, JSON.stringify(routeIdLineStringDict, null, 2),  {encoding: 'utf-8'});
+  fs.writeFileSync(stopIdLocationsPath, JSON.stringify(stopIdPointDict, null, 2),  {encoding: 'utf-8'});
 })();

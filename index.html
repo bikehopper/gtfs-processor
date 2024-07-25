@@ -21,8 +21,12 @@
       container: 'map', // container id
       style: 'https://api.maptiler.com/maps/basic-v2/style.json?key=WT4VsZ6xeluYL5zzsbwL', // style URL
       center: [0, 0], // starting position [lng, lat]
-      zoom: 1 // starting zoom
+      zoom: 1, // starting zoom
+      showTileBoundaries: true,
     });
+
+    map.showTileBoundaries = true;
+
     map.on('load', () => {
       map.addSource('routes-tiles', {
         type: 'vector',
