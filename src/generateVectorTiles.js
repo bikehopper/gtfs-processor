@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-const geojson2mvt = require('geojson2mvt');
 const bbox = require('@turf/bbox').default;
 const turf = require('@turf/helpers');
 const { tmpdir } = require('node:os');
@@ -8,15 +7,6 @@ const { unzipGtfs } = require('./gtfs-helpers');
 const { createReadStream } = require('node:fs');
 const { parse } = require('csv-parse');
 const { mkdtemp } = require('node:fs/promises');
-
-const agencies = [
-  {
-    agency_key: 'RG',
-    // Input GTFS file path
-    path: path.join(__dirname, '../gtfs/GTFSTransitData_RG.zip'),
-  }
-];
-
 
 function flattenStopRoutes(geojson) {
   const stopIdPointDict = {};
@@ -45,17 +35,23 @@ function flattenStopRoutes(geojson) {
   return {stopIdPointDict, routeIdLineStringDict};
 }
 
-const lineClippingDict = {};
-
 (async () => {
-  // const gtfsToGeoJSON = await import('gtfs-to-geojson');
+  const gtfsToGeoJSON = await import('gtfs-to-geojson');
+
+  const agencies = [
+    {
+      agency_key: 'RG',
+      // Input GTFS file path
+      path: resolve(process.env.GTFS_ZIP_PATH),
+    }
+  ];
   
-  // await gtfsToGeoJSON.default({
-  //   agencies,
-  //   outputType: 'agency',
-  //   outputFormat: 'lines-and-stops',
-  //   ignoreDuplicates: true,
-  // });
+  await gtfsToGeoJSON.default({
+    agencies,
+    outputType: 'agency',
+    outputFormat: 'lines-and-stops',
+    ignoreDuplicates: true,
+  });
 
   console.log('geojson generated');
 
@@ -81,14 +77,11 @@ const lineClippingDict = {};
     }
   };
 
-  // /tiles output director gets generated at cwd
-  // geojson2mvt(geojson, options);
-
   // /dicts 
-  const rootDir = path.join(process.cwd(), '/dicts/');
-  const linesStringsPath = path.join(rootDir, 'routeIdLineStringDict.json');
-  const stopIdLocationsPath = path.join(rootDir, 'stopIdPointsDict.json');
-  const distanceAlongDictPath = path.join(rootDir, 'distanceAlongDict.json');
+  const rootDir = resolve(process.env.OUTPUT_DIR_PATH);;
+  const linesStringsPath = path.join(rootDir, 'route-id-line-string-lookup.json');
+  const stopIdLocationsPath = path.join(rootDir, 'stop-id-point-lookup.json');
+  const distanceAlongDictPath = path.join(rootDir, 'distance-along-lookup.json');
 
   const gtfsOutputPath = await mkdtemp(path.join(tmpdir(), 'gtfs-'));
   await unzipGtfs(agencies[0].path, gtfsOutputPath, new Set(['stop_times.txt']));
