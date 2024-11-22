@@ -1,4 +1,4 @@
-function getDistanceAlongLookup(parsedStopTimesReadStream) {
+async function getDistanceAlongLookup(parsedStopTimesReadStream) {
   let rowIdx = 0;
   let stopIdIdx = 0;
   let tripIdIdx = 0;

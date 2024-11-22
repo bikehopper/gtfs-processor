@@ -1,4 +1,4 @@
-const { createReadStream } = require('node:fs');
+const { createReadStream, readFileSync } = require('node:fs');
 const { writeFile, mkdtemp } = require('node:fs/promises');
 const turfConvex = require('@turf/convex').default;
 const turfBuffer = require('@turf/buffer').default;
@@ -24,7 +24,7 @@ const ENV_FILTERED_AGENCY_IDS = process.env.FILTERED_AGENCY_IDS || '';
 const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS || '';
 
 (async () => {
-  // PART 1: COMPUTING transit-service-area
+  // PART 1: Computing transit-service-area.json
 
   // Initialize temprary folders to hold gtfs files
   const gtfsFilePath = resolve(process.env.GTFS_ZIP_PATH);
@@ -89,8 +89,7 @@ const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS 
   const agencies = [
     {
       agency_key: 'RG',
-      // Input GTFS file path
-      path: resolve(process.env.GTFS_ZIP_PATH),
+      path: gtfsFilePath,
     }
   ];
   
@@ -101,17 +100,16 @@ const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS 
     ignoreDuplicates: true,
   });
 
-  console.log(`Finished writing output files to: ${outputPath}`);
   // This is a hardcoded temp geojson file thats an intermediary
   const outputGeojsonPath = join(process.cwd(), '/geojson/RG/RG.geojson');
   
-  const geojson = JSON.parse(fs.readFileSync(outputGeojsonPath, {encoding: 'utf-8'}));
+  const geojson = JSON.parse(readFileSync(outputGeojsonPath, {encoding: 'utf-8'}));
   const {stopIdPointLookup, routeIdLineStringLookup} = flattenStopRoutes(geojson);
 
   stopTimesReadableStream = createReadStream(resolve(gtfsOutputPath, `stop_times.txt`), {encoding: 'utf8'});
   const parser = stopTimesReadableStream.pipe(parse());
 
-  const distanceAlongLookup = getDistanceAlongLookup(parser);
+  const distanceAlongLookup = await getDistanceAlongLookup(parser);
   
   const routlineLookups = {
     stopIdPointLookup,
