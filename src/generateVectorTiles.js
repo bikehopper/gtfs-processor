@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-const bbox = require('@turf/bbox').default;
 const turf = require('@turf/helpers');
 const { tmpdir } = require('node:os');
 const { unzipGtfs } = require('./gtfs-helpers');
@@ -9,8 +8,8 @@ const { parse } = require('csv-parse');
 const { mkdtemp } = require('node:fs/promises');
 
 function flattenStopRoutes(geojson) {
-  const stopIdPointDict = {};
-  const routeIdLineStringDict = {};
+  const stopIdPointLookup = {};
+  const routeIdLineStringLookup = {};
 
   for(const feature of geojson.features){
     if(feature.geometry.type === 'Point'){
@@ -21,18 +20,18 @@ function flattenStopRoutes(geojson) {
       const stopId = feature.properties['stop_id'];
       if (stopId && stopId.length > 0 ) {
         const point = turf.point(feature.geometry.coordinates);
-        stopIdPointDict[stopId] = point
+        stopIdPointLookup[stopId] = point
       }
     } else if(feature.geometry.type === 'LineString') {
       const routeId = feature.properties.route_id;
       if (routeId && routeId.length > 0) {
         const lineString = turf.lineString(feature.geometry.coordinates);
-        routeIdLineStringDict[routeId] = lineString;
+        routeIdLineStringLookup[routeId] = lineString;
       }
     }
   }
 
-  return {stopIdPointDict, routeIdLineStringDict};
+  return {stopIdPointLookup, routeIdLineStringLookup};
 }
 
 (async () => {
@@ -59,29 +58,13 @@ function flattenStopRoutes(geojson) {
   const outputGeojsonPath = path.join(process.cwd(), '/geojson/RG/RG.geojson');
   
   const geojson = JSON.parse(fs.readFileSync(outputGeojsonPath, {encoding: 'utf-8'}));
-  const {stopIdPointDict, routeIdLineStringDict} = flattenStopRoutes(geojson);
-
-  const boundingBox = bbox(geojson);
-  const options = {
-    layerName: 'layer0',
-    rootDir: './tiles',
-    bbox: [
-      boundingBox[1],
-      boundingBox[0],
-      boundingBox[3],
-      boundingBox[2],
-    ], //[south,west,north,east]
-    zoom: {
-      min: 7,
-      max: 15,
-    }
-  };
+  const {stopIdPointLookup, routeIdLineStringLookup} = flattenStopRoutes(geojson);
 
   // /dicts 
   const rootDir = resolve(process.env.OUTPUT_DIR_PATH);;
   const linesStringsPath = path.join(rootDir, 'route-id-line-string-lookup.json');
   const stopIdLocationsPath = path.join(rootDir, 'stop-id-point-lookup.json');
-  const distanceAlongDictPath = path.join(rootDir, 'distance-along-lookup.json');
+  const distanceAlongLookupPath = path.join(rootDir, 'distance-along-lookup.json');
 
   const gtfsOutputPath = await mkdtemp(path.join(tmpdir(), 'gtfs-'));
   await unzipGtfs(agencies[0].path, gtfsOutputPath, new Set(['stop_times.txt']));
@@ -93,7 +76,7 @@ function flattenStopRoutes(geojson) {
   let stopIdIdx = 0;
   let tripIdIdx = 0;
   let distanceAlongIdx = 0;
-  const distanceAlongDict = {};
+  const distanceAlongLookup = {};
   for await (const stopCsv of parser) {
     if (rowIdx === 0) {
       stopIdIdx = stopCsv.indexOf('stop_id');
@@ -105,7 +88,7 @@ function flattenStopRoutes(geojson) {
       const distanceAlong = parseFloat(stopCsv[distanceAlongIdx]);
 
       if (!isNaN(distanceAlong) && stopId != null && stopId.length > 0 && tripId != null && tripId.length > 0){
-        distanceAlongDict[`${stopId}|${tripId}`] = distanceAlong;
+        distanceAlongLookup[`${stopId}|${tripId}`] = distanceAlong;
       }
     }
 
@@ -115,7 +98,7 @@ function flattenStopRoutes(geojson) {
   if(!fs.existsSync(rootDir)){
     fs.mkdirSync(rootDir);
   }
-  fs.writeFileSync(linesStringsPath, JSON.stringify(routeIdLineStringDict, null, 2),  {encoding: 'utf-8'});
-  fs.writeFileSync(stopIdLocationsPath, JSON.stringify(stopIdPointDict, null, 2),  {encoding: 'utf-8'});
-  fs.writeFileSync(distanceAlongDictPath, JSON.stringify(distanceAlongDict, null, 2),  {encoding: 'utf-8'});
+  fs.writeFileSync(linesStringsPath, JSON.stringify(routeIdLineStringLookup, null, 2),  {encoding: 'utf-8'});
+  fs.writeFileSync(stopIdLocationsPath, JSON.stringify(stopIdPointLookup, null, 2),  {encoding: 'utf-8'});
+  fs.writeFileSync(distanceAlongLookupPath, JSON.stringify(distanceAlongLookup, null, 2),  {encoding: 'utf-8'});
 })();

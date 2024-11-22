@@ -2,9 +2,12 @@ const { createReadStream } = require('node:fs');
 const { writeFile, mkdtemp } = require('node:fs/promises');
 const turfConvex = require('@turf/convex').default;
 const turfBuffer = require('@turf/buffer').default;
+const { flattenStopRoutes } = require('./flatten-stop-routes');
+const { getDistanceAlongLookup } = require('./distance-along-lookup-helper');
 const { resolve, join } = require("path");
 const { tmpdir } = require('node:os');
 const { filterRouteIds, filterTripIds, getInterestingStopIds, getInterestingStopsAsGeoJsonPoints, unzipGtfs } = require('./gtfs-helpers');
+const { parse } = require('csv-parse');
 
 /*
  * This script computes a polygon to define the "transit service area". The
@@ -21,6 +24,8 @@ const ENV_FILTERED_AGENCY_IDS = process.env.FILTERED_AGENCY_IDS || '';
 const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS || '';
 
 (async () => {
+  // PART 1: COMPUTING transit-service-area
+
   // Initialize temprary folders to hold gtfs files
   const gtfsFilePath = resolve(process.env.GTFS_ZIP_PATH);
   const gtfsOutputPath =  await mkdtemp(join(tmpdir(), 'gtfs-'));
@@ -51,7 +56,7 @@ const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS 
   // stops, we build a set of all interesting stops. that is because if a stop
   // is served both by a filtered agency AND a local transit agency, then we
   // want to include it.
-  const stopTimesReadableStream = createReadStream(resolve(gtfsOutputPath, `stop_times.txt`), {encoding: 'utf8'})
+  let stopTimesReadableStream = createReadStream(resolve(gtfsOutputPath, `stop_times.txt`), {encoding: 'utf8'})
   const interestingStopIds = await getInterestingStopIds(filteredTripIds, stopTimesReadableStream);
 
   // and now just aggregate all the interesting stop IDs as GeoJSON
@@ -74,5 +79,49 @@ const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS 
     'utf8',
   );
 
+  stopsReadableStream.close();
+  
+  console.log(`Finished writing transit-service-area.json to: ${outputPath}`)
+
+  // PART 2: Computing lookup tables for transit route geometry
+  const gtfsToGeoJSON = await import('gtfs-to-geojson');
+
+  const agencies = [
+    {
+      agency_key: 'RG',
+      // Input GTFS file path
+      path: resolve(process.env.GTFS_ZIP_PATH),
+    }
+  ];
+  
+  await gtfsToGeoJSON.default({
+    agencies,
+    outputType: 'agency',
+    outputFormat: 'lines-and-stops',
+    ignoreDuplicates: true,
+  });
+
   console.log(`Finished writing output files to: ${outputPath}`);
+  // This is a hardcoded temp geojson file thats an intermediary
+  const outputGeojsonPath = join(process.cwd(), '/geojson/RG/RG.geojson');
+  
+  const geojson = JSON.parse(fs.readFileSync(outputGeojsonPath, {encoding: 'utf-8'}));
+  const {stopIdPointLookup, routeIdLineStringLookup} = flattenStopRoutes(geojson);
+
+  stopTimesReadableStream = createReadStream(resolve(gtfsOutputPath, `stop_times.txt`), {encoding: 'utf8'});
+  const parser = stopTimesReadableStream.pipe(parse());
+
+  const distanceAlongLookup = getDistanceAlongLookup(parser);
+  
+  const routlineLookups = {
+    stopIdPointLookup,
+    routeIdLineStringLookup,
+    distanceAlongLookup,
+  };
+
+  await writeFile(
+    resolve(outputPath, 'route-line-lookup.json'),
+    JSON.stringify(routlineLookups, null, 2),
+    'utf8',
+  );
 })();
