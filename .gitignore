@@ -5,5 +5,3 @@ volumes
 gtfs
 output
 geojson
-tiles
-dicts
