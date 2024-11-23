@@ -135,7 +135,7 @@ const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS 
   const {stopIdPointLookup, routeIdLineStringLookup} = getStopAndRouteLookups(geojson);
 
   stopTimesReadableStream = createReadStream(resolve(gtfsOutputPath, `stop_times.txt`), {encoding: 'utf8'});
-  const parser = stopTimesReadableStream.pipe(parse());
+  const parser = stopTimesReadableStream.pipe(parse({columns: true}));
 
   // Lookup tables for clipping LineStrings
   const distanceAlongLookup = await getDistanceAlongLookup(parser);
