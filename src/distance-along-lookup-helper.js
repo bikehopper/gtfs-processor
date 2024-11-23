@@ -14,8 +14,12 @@ async function getDistanceAlongLookup(parsedStopTimesReadStream) {
       const tripId = stopCsv[tripIdIdx];
       const distanceAlong = parseFloat(stopCsv[distanceAlongIdx]);
 
-      if (!isNaN(distanceAlong) && stopId != null && stopId.length > 0 && tripId != null && tripId.length > 0){
-        distanceAlongLookup[`${stopId}|${tripId}`] = distanceAlong;
+      if (!isNaN(distanceAlong) && stopId && tripId){
+        // Lazily init the first level in the dictionary
+        if (distanceAlongLookup[stopId] == null) {
+          distanceAlongLookup[stopId] = {};
+        }
+        distanceAlongLookup[stopId][tripId] = distanceAlong;
       }
     }
 
