@@ -2,7 +2,7 @@ const { createReadStream, readFileSync } = require('node:fs');
 const { writeFile, mkdtemp } = require('node:fs/promises');
 const turfConvex = require('@turf/convex').default;
 const turfBuffer = require('@turf/buffer').default;
-const { flattenStopRoutes } = require('./stop-and-route-lookup-helper');
+const { getStopAndRouteLookups } = require('./stop-and-route-lookup-helper');
 const { getDistanceAlongLookup } = require('./distance-along-lookup-helper');
 const { resolve, join } = require("path");
 const { tmpdir } = require('node:os');
@@ -148,7 +148,7 @@ const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS 
 
   await writeFile(
     resolve(outputPath, 'route-line-lookup.json'),
-    JSON.stringify(routlineLookups, null, 2),
+    JSON.stringify(routlineLookups),
     'utf8',
   );
 })();

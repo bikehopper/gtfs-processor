@@ -1,6 +1,6 @@
 const turf = require('@turf/helpers');
 
-function flattenStopRoutes(geojson) {
+function getStopAndRouteLookups(geojson) {
   const stopIdPointLookup = {};
   const routeIdLineStringLookup = {};
 
@@ -24,5 +24,5 @@ function flattenStopRoutes(geojson) {
 }
 
 module.exports = {
-  flattenStopRoutes,
+  getStopAndRouteLookups,
 };
