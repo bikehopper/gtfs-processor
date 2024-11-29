@@ -16,7 +16,7 @@ const { generateRouteLineClippingLookupTables } = require('./generate-route-line
  *     route LineString shapes, and extra information for clipping route LineStrings between two stops.
  */
 
-const requiredGTFSFiles = new Set(['routes.txt', 'trips.txt', 'stop_times.txt', 'stops.txt']);
+const requiredGTFSFiles = new Set(['routes.txt', 'trips.txt', 'stop_times.txt', 'stops.txt', 'shapes.txt']);
 const ENV_FILTERED_AGENCY_IDS = process.env.FILTERED_AGENCY_IDS || '';
 const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS || '';
 
@@ -42,7 +42,6 @@ const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS 
   // Generate route-line-lookup.json
   await generateRouteLineClippingLookupTables(
     gtfsOutputPath,
-    gtfsFilePath,
     outputPath,
   );
 
