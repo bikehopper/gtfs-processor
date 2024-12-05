@@ -42,6 +42,7 @@ async function generateRouteLineClippingLookupTables(
     JSON.stringify(routlineLookups),
     'utf8',
   );
+  console.log(JSON.stringify(routlineLookups, null, 2));
 };
 
 module.exports = {
