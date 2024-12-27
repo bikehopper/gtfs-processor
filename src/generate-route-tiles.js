@@ -31,8 +31,8 @@ async function generateRouteTiles(
       const shapes = Object.values(trips).map((shapeId) => shapeIdLineStringLookup[shapeId]);
       const routeLineString = multiLineString(shapes, {
         route_id: routeId,
-        route_color: `0x${routeColor}`,
-        route_text_color: `0x${routeTextColor}`,
+        route_color: `#${routeColor}`,
+        route_text_color: `#${routeTextColor}`,
       });
       
       await appendFile(ldGeoJsonPath, JSON.stringify(routeLineString)+'\n');
