@@ -51,7 +51,7 @@ async function generateRouteTiles(
   const tippecanoeCommand = `tippecanoe \
    -e ${tilesPath} \
    -l route-lines \
-   -P -Z7 \
+   -P -Z7 -pC -pk \
    ${ldGeoJsonPath}`;
   
   const result = shell.exec(tippecanoeCommand);
