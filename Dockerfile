@@ -1,6 +1,9 @@
 FROM node:20-slim
+RUN apt-get update && apt-get install dumb-init gcc g++ make libsqlite3-dev zlib1g-dev
+WORKDIR submodule-deps/tippecanoe
+RUN make
+RUN make install
 WORKDIR /app
-RUN apt-get update && apt-get install dumb-init
 COPY package.json /app
 COPY package-lock.json /app
 COPY ./src /app/src
