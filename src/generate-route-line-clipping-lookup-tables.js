@@ -19,6 +19,7 @@ const { resolve } = require("path");
  *
  * @param {string} unzippedGtfsPath path to unzipped gtfs text files
  * @param {string} outputPath path to directory in which generated file is dumped into
+ * @return {Object} {stopTripShapeLookup: {<route-id, trip-id> : <shape-id>}, shapeIdLineStringLookup: {<shape-id> : <LineString>}}
  */
 async function generateRouteLineClippingLookupTables(
   unzippedGtfsPath,
@@ -42,6 +43,8 @@ async function generateRouteLineClippingLookupTables(
     JSON.stringify(routlineLookups),
     'utf8',
   );
+
+  return routlineLookups;
 };
 
 module.exports = {

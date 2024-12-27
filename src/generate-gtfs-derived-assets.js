@@ -41,7 +41,7 @@ const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS 
   console.log(`Finished writing transit-service-area.json to: ${outputPath}`)
   
   // Generate route-line-lookup.json
-  await generateRouteLineClippingLookupTables(
+  const routelineLookups = await generateRouteLineClippingLookupTables(
     gtfsOutputPath,
     outputPath,
   );
@@ -49,7 +49,8 @@ const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS 
   console.log(`Finished writing route-line-lookup.json to: ${outputPath}`)
 
   await generateRouteTiles(
-    gtfsFilePath,
+    routelineLookups,
+    gtfsOutputPath,
     outputPath,
   );
 

@@ -1,61 +1,63 @@
-const { readFile } = require('node:fs/promises');
-const { join } = require("path");
-const bbox = require('@turf/bbox').default;
-const geojson2mvt = require('geojson2mvt');
-
-// Converts the `routes` property on a stop point to a comma-separated string
-// Mutates the input geojson in-place
-// We do this because the final VectorTile protobufs do not support arrays for feature properties
-function stopRoutesToCSVInPlace(geojson) {
-  for(const feature of geojson.features){
-    if(feature.geometry.type === 'Point'){
-      const routes = feature.properties.routes;
-      feature.properties['route_ids'] = routes.map((route) => route.route_id).join(',');
-      delete feature.properties.routes;
-    } 
-  }
-}
+const { createReadStream, existsSync } = require('node:fs');
+const { appendFile, unlink, rm } = require('node:fs/promises');
+const { resolve, join } = require("path");
+const { parse } = require('csv-parse');
+const { multiLineString } = require('@turf/helpers');
+const shell = require('shelljs');
 
 async function generateRouteTiles(
-  zippedGtfsPath,
+  routelineLookups,
+  unzippedGtfsPath,
   outputPath,
 ) {
-  const gtfsToGeoJSON = await import('gtfs-to-geojson');
-  const agencies = [
-    {
-      agency_key: 'RG',
-      path: zippedGtfsPath,
+  const { stopTripShapeLookup, shapeIdLineStringLookup } = routelineLookups;
+
+  const routesStream = createReadStream(resolve(unzippedGtfsPath, 'routes.txt'), {encoding: 'utf8'});
+  const parser = routesStream.pipe(parse({columns: true}));
+
+  const ldGeoJsonPath = join(outputPath, 'routelines.ldgeojson');
+  if (existsSync(ldGeoJsonPath)) {
+    await unlink(ldGeoJsonPath);
+  }
+  
+  console.log('Staring creation of routeline LDGeoJSON');
+  for await(const route of parser) {
+    const routeId = route['route_id'];
+    const routeColor = route['route_color'];
+    const routeTextColor = route['route_text_color'];
+
+    const trips = stopTripShapeLookup[routeId];
+    if (trips) {
+      const shapes = Object.values(trips).map((shapeId) => shapeIdLineStringLookup[shapeId]);
+      const routeLineString = multiLineString(shapes, {
+        route_id: routeId,
+        route_color: routeColor,
+        route_text_color: routeTextColor,
+      });
+      
+      await appendFile(ldGeoJsonPath, JSON.stringify(routeLineString)+'\n');
     }
-  ];
-  await gtfsToGeoJSON.default({
-    agencies,
-    outputType: 'agency',
-    outputFormat: 'lines-and-stops',
-    ignoreDuplicates: true,
-  });
+  }
+  console.log('Finished creating LDGeoJSON for all routelines');
 
-  // gtfsToGeoJSON has this hardcoded path that it outputs the gtfs file too
-  const outputGeojsonPath = join(process.cwd(), '/geojson/RG/RG.geojson');
+  if (!shell.which('tippecanoe')) {
+    throw new Error('tippecanoe is not installed and available on PATH');
+  }
+  const tilesPath = join(outputPath, 'route-tiles');
+  if (existsSync(tilesPath)) {
+    await rm(tilesPath, {recursive: true});
+  }
 
-  const geojson = JSON.parse(await readFile(outputGeojsonPath, {encoding: 'utf-8'}));
-  stopRoutesToCSVInPlace(geojson);
-  const boundingBox = bbox(geojson);
-  const tilingOptions = {
-    layerName: 'layer0',
-    rootDir: join(outputPath, 'route-tiles'),
-    bbox: [
-      boundingBox[1],
-      boundingBox[0],
-      boundingBox[3],
-      boundingBox[2],
-    ], //[south,west,north,east]
-    zoom: {
-      min: 7,
-      max: 14,
-    }
-  };
-
-  geojson2mvt(geojson, tilingOptions);
+  const tippecanoeCommand = `tippecanoe \
+   -e ${tilesPath} \
+   -l route-lines \
+   -P -Z7 \
+   ${ldGeoJsonPath}`;
+  
+  const result = shell.exec(tippecanoeCommand);
+  if (result.code !== 0) {
+    throw new Error('Tippecanoe failed to tile');
+  }
 }
 
 module.exports = {
