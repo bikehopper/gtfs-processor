@@ -28,7 +28,8 @@ async function generateRouteTiles(
 
     const trips = stopTripShapeLookup[routeId];
     if (trips) {
-      const shapes = Object.values(trips).map((shapeId) => shapeIdLineStringLookup[shapeId]);
+      const shapes = Array.from(new Set(Object.values(trips)).values())   // dedup'ed list of shaped-id's for the route
+            .map((shapeId) => shapeIdLineStringLookup[shapeId]);
       const routeLineString = multiLineString(shapes, {
         route_id: routeId,
         route_color: `#${routeColor}`,
