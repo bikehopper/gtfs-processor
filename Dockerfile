@@ -1,5 +1,5 @@
 FROM ubuntu:22.04 AS tippecanoe-builder
-RUN apt-get update && apt-get -y install gcc g++ make
+RUN apt-get update && apt-get -y install gcc g++ make libsqlite3-dev zlib1g-dev
 COPY ./submodule-deps /app/submodule-deps
 WORKDIR /app/submodule-deps/tippecanoe
 RUN make
