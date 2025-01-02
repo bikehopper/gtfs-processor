@@ -2,7 +2,7 @@ const { createReadStream, existsSync } = require('node:fs');
 const { appendFile, unlink, rm } = require('node:fs/promises');
 const { resolve, join } = require("path");
 const { parse } = require('csv-parse');
-const { multiLineString } = require('@turf/helpers');
+const { lineString } = require('@turf/helpers');
 const shell = require('shelljs');
 
 async function generateRouteTiles(
@@ -28,15 +28,31 @@ async function generateRouteTiles(
 
     const trips = stopTripShapeLookup[routeId];
     if (trips) {
-      const shapes = Array.from(new Set(Object.values(trips)).values())   // dedup'ed list of shaped-id's for the route
-            .map((shapeId) => shapeIdLineStringLookup[shapeId]);
-      const routeLineString = multiLineString(shapes, {
-        route_id: routeId,
-        route_color: `#${routeColor}`,
-        route_text_color: `#${routeTextColor}`,
-      });
+      const seenShapes = new Map();
+      for (const tripId of Object.keys(trips)) {
+        const shapeId = trips[tripId];
+        const shape = shapeIdLineStringLookup[shapeId];
+        if (shape) {
+          if (!seenShapes.has(shapeId)) {
+            // First time seeing this shape, so create the GeoJSON lineString
+            const geojson = lineString(shape, {
+              route_id: routeId,
+              trip_ids: tripId, // comma-seperated list of trip-ids, MVT doesn't support arrays
+              route_color: `#${routeColor}`,
+              route_text_color: `#${routeTextColor}`,
+            });
+            seenShapes.set(shapeId, geojson);
+          } else {
+            // Seeing the same again, but for different trip, so add this trip-id to its trip_ids prop
+            const geojson = seenShapes.get(shapeId);   
+            geojson.properties.trip_ids += `,${tripId}`;
+          }
+        }
+      }
       
-      await appendFile(ldGeoJsonPath, JSON.stringify(routeLineString)+'\n');
+      for(const routeLineString of seenShapes.values()) {
+        await appendFile(ldGeoJsonPath, JSON.stringify(routeLineString)+'\n');
+      }
     }
   }
   console.log('Finished creating LDGeoJSON for all routelines');
