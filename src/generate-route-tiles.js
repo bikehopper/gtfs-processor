@@ -56,13 +56,12 @@ async function appendRouteLineStringToFile(
 }
 
 /**
- * Creates a Map<stop_id, GeoJsonPoint>
+ * Appends all the stops to the LDGeoJson file
  * 
  * @param {*} stopsParser 
- * @returns {Map}
+ * @param {*} ldGeoJsonPath 
  */
-async function getStopsMap(stopsParser) {
-  const stopsMap = new Map();
+async function appendStops(stopsParser, ldGeoJsonPath) {
   for await(const stop of stopsParser) {
     const stopId = stop['stop_id'];
     const stopName = stop['stop_name'];
@@ -72,48 +71,11 @@ async function getStopsMap(stopsParser) {
     if (!isNaN(lat) && !isNaN(lon) && !!stopId) {
       const geojson = point([lon, lat], {
         stop_name: stopName,
-        trip_ids: new Set(), // Use Set to de-dup
         stop_id: stopId,
       });
-      stopsMap.set(stopId, geojson);
+
+      await appendFile(ldGeoJsonPath, JSON.stringify(geojson)+'\n');
     }
-  }
-
-  return stopsMap;
-}
-
-/**
- * Loops over `stop_times.txt` and populates the `trip_ids` Set with trip-ids fro the stop.
- * Mutates the points within `stopsMap` in-place.
- * 
- * @param {*} stopTimesParser 
- * @param {Map} stopsMap 
- */
-async function addTripsToStops(stopTimesParser, stopsMap){
-  for await (const stopTime of stopTimesParser) {
-    const stopId = stopTime['stop_id'];
-    const tripId = stopTime['trip_id'];
-
-    if (stopsMap.has(stopId)) {
-      const stopGeojson = stopsMap.get(stopId);
-      if (!!tripId) {
-        stopGeojson.properties.trip_ids.add(tripId);
-      }
-    }
-  }
-} 
-
-/**
- * Appends all the stops in `stopsMap` to the LDGeoJSON file.
- * 
- * @param {string} ldGeoJsonPath 
- * @param {Map} stopsMap 
- */
-async function addStopsToFile(ldGeoJsonPath, stopsMap){
-  for (const stopGeoJson of stopsMap.values()){
-    // replace Set with comma separated string
-    stopGeoJson.properties.trip_ids = Array.from(stopGeoJson.properties.trip_ids).join(',');
-    await appendFile(ldGeoJsonPath, JSON.stringify(stopGeoJson)+'\n');
   }
 }
 
@@ -138,12 +100,8 @@ async function generateRouteTiles(
 
   const stopsStream = createReadStream(resolve(unzippedGtfsPath, 'stops.txt'), {encoding: 'utf8'});
   const stopsParser = stopsStream.pipe(parse({columns: true}));
-  const stopsMap = await getStopsMap(stopsParser);
+  await appendStops(stopsParser, ldGeoJsonPath);
 
-  const stopTimesStream = createReadStream(resolve(unzippedGtfsPath, 'stop_times.txt'), {encoding: 'utf8'});
-  const stopTimesParser = stopTimesStream.pipe(parse({columns: true}));
-  await addTripsToStops(stopTimesParser, stopsMap);
-  await addStopsToFile(ldGeoJsonPath, stopsMap);
   console.log('Finished addings stop points to LDGeoJSON');
 
   if (!shell.which('tippecanoe')) {
