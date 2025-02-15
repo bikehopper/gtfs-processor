@@ -85,42 +85,61 @@ async function generateRouteTiles(
   outputPath,
 ) {
   
-  const ldGeoJsonPath = join(outputPath, 'routelines.ldgeojson');
-  if (existsSync(ldGeoJsonPath)) {
-    await unlink(ldGeoJsonPath);
+  const routeLinesLDGeoJsonPath = join(outputPath, 'routelines.ldgeojson');
+  if (existsSync(routeLinesLDGeoJsonPath)) {
+    await unlink(routeLinesLDGeoJsonPath);
+  }
+
+  const stopLDGeoJsonPath = join(outputPath, 'stops.ldgeojson');
+  if (existsSync(stopLDGeoJsonPath)) {
+    await unlink(stopLDGeoJsonPath);
   }
   
   console.log('Staring creation of LDGeoJSON');
   const routesStream = createReadStream(resolve(unzippedGtfsPath, 'routes.txt'), {encoding: 'utf8'});
   const routesParser = routesStream.pipe(parse({columns: true}));
   for await(const route of routesParser) {
-    await appendRouteLineStringToFile(route, ldGeoJsonPath, routelineLookups);
+    await appendRouteLineStringToFile(route, routeLinesLDGeoJsonPath, routelineLookups);
   }
   console.log('Finished adding route LineStrings LDGeoJSON');
 
   const stopsStream = createReadStream(resolve(unzippedGtfsPath, 'stops.txt'), {encoding: 'utf8'});
   const stopsParser = stopsStream.pipe(parse({columns: true}));
-  await appendStops(stopsParser, ldGeoJsonPath);
+  await appendStops(stopsParser, stopLDGeoJsonPath);
 
   console.log('Finished addings stop points to LDGeoJSON');
 
   if (!shell.which('tippecanoe')) {
     throw new Error('tippecanoe is not installed and available on PATH');
   }
-  const tilesPath = join(outputPath, 'route-tiles');
-  if (existsSync(tilesPath)) {
-    await rm(tilesPath, {recursive: true});
+  const routeTilesPath = join(outputPath, 'route-tiles');
+  if (existsSync(routeTilesPath)) {
+    await rm(routeTilesPath, {recursive: true});
   }
 
-  const tippecanoeCommand = `tippecanoe \
-   -e ${tilesPath} \
+  const stopTilesPath = join(outputPath, 'stop-tiles');
+  if (existsSync(stopTilesPath)) {
+    await rm(stopTilesPath, {recursive: true});
+  }
+
+  const routeLinesCommand = `tippecanoe \
+   -e ${routeTilesPath} \
    -l route-lines \
-   -P -Z7 -pC -pk \
-   ${ldGeoJsonPath}`;
-  
-  const result = shell.exec(tippecanoeCommand);
+   -P -Z7 -S 15 \
+   ${routeLinesLDGeoJsonPath}`;
+  const result = shell.exec(routeLinesCommand);
   if (result.code !== 0) {
-    throw new Error('Tippecanoe failed to tile');
+    throw new Error('Tippecanoe failed to tile route-lines');
+  }
+
+  const stopsCommand = `tippecanoe \
+   -e ${stopTilesPath} \
+   -l stops \
+   -P -Z8 \
+   ${stopLDGeoJsonPath}`;
+  const stopsResult = shell.exec(stopsCommand);
+  if (stopsResult.code !== 0) {
+    throw new Error('Tippecanoe failed to tile stops');
   }
 }
 
