@@ -135,7 +135,7 @@ async function generateRouteTiles(
   const stopsCommand = `tippecanoe \
    -e ${stopTilesPath} \
    -l stops \
-   -P -Z8 \
+   -P -Z8 -r 0 -g 0 \
    ${stopLDGeoJsonPath}`;
   const stopsResult = shell.exec(stopsCommand);
   if (stopsResult.code !== 0) {
