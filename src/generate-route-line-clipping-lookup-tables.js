@@ -25,7 +25,9 @@ const { resolve } = require("path");
  * @return {Object} {
  *    stopTripShapeLookup: {<route-id, trip-id> : <shape-id>}, 
  *    shapeIdLineStringLookup: {<shape-id> : <LineString>},
- *    tripIdStopIdsLookupL {<trip-id>: <stop-id[]>},
+ *    tripIdStopIdsLookup: {<trip-id>: <stop-id[]>},
+ *    tripRouteLookup: Map<<trip-id> : Set<route-id>>,
+ *    stopIdTripIdsLookup: Map<<stop-id> : Set<<trip-id>>,
  * }
  */
 async function generateRouteLineClippingLookupTables(
@@ -34,28 +36,33 @@ async function generateRouteLineClippingLookupTables(
 ) {
 
   console.log('Starting build of routeline clipping tables');
-  const stopTripShapeLookup = await getRouteTripShapeLookup(unzippedGtfsPath);
+  const {routeTripShapeLookup: stopTripShapeLookup, tripRouteLookup} = await getRouteTripShapeLookup(unzippedGtfsPath);
   console.log('Built <route-id, trip-id> : <shape-id> table');
 
   const shapeIdLineStringLookup = await getShapesLookup(unzippedGtfsPath);
   console.log('Built <shape-id> : <LineString> table');
 
-  const tripIdStopIdsLookup = await getStopsForTripLookup(unzippedGtfsPath);
+  const { tripIdStopIdsLookup, stopIdTripIdsLookup } = await getStopsForTripLookup(unzippedGtfsPath);
   console.log('Built <trip-id> : <stop-id[]> table');
-  
-  const routlineLookups = {
-    stopTripShapeLookup,
-    shapeIdLineStringLookup,
-    tripIdStopIdsLookup,
-  };
 
+  // Write the JSON dictionaries to disk so we can use it in bikehopper-web-app at request time for fast lookups
   await writeFile(
     resolve(outputPath, 'route-line-lookup.json'),
-    JSON.stringify(routlineLookups),
+    JSON.stringify({
+      stopTripShapeLookup,
+      shapeIdLineStringLookup,
+      tripIdStopIdsLookup,
+    }),
     'utf8',
   );
 
-  return routlineLookups;
+  return {
+    stopTripShapeLookup,
+    shapeIdLineStringLookup,
+    tripIdStopIdsLookup,
+    tripRouteLookup,
+    stopIdTripIdsLookup,
+  };
 };
 
 module.exports = {

@@ -8,31 +8,41 @@ const { parse } = require('csv-parse');
  * and the value is an Array of stop-ids on that trip.
  * 
  * @param {*} unzippedGtfsPath 
- * @returns {Object} <trip-id>: <stop-id>[]
+ * @returns {Object} {
+ *    tripIdStopIdsLookup: <trip-id>: <stop-id>[],
+ *    stopIdTripIdsLookup: Map<<stop-id>, Set<trip-id>>
+ * }
  */
 async function getStopsForTripLookup(unzippedGtfsPath){
   const stopTimesStream = createReadStream(resolve(unzippedGtfsPath, 'stop_times.txt'), {encoding: 'utf8'});
   const parser = stopTimesStream.pipe(parse({columns: true}));
-  const lookupTable = {};
+  const tripIdStopIdsLookup = {};
+  // Don't need to serialize the <stop-id> : <trip-ids>[] lookup, so use a Map
+  const stopIdTripIdsLookup = new Map();
   for await (const stopTime of parser) {
     const stopId = stopTime['stop_id'];
     const tripId = stopTime['trip_id'];
     if (tripId && stopId) {
       // Use a set to de-dup stop-ids
-      if (lookupTable[tripId] == null) {
-        lookupTable[tripId] = new Set();
+      if (tripIdStopIdsLookup[tripId] == null) {
+        tripIdStopIdsLookup[tripId] = new Set();
       }
-      lookupTable[tripId].add(stopId);
+      if (!stopIdTripIdsLookup.has(stopId)) {
+        stopIdTripIdsLookup.set(stopId, new Set());
+      }
+
+      tripIdStopIdsLookup[tripId].add(stopId);
+      stopIdTripIdsLookup.get(stopId).add(tripId);
     }
   }
 
   // Convert all the Set(s) to Array(s) so we have JSON in lookupTable
-  for (const tripId of Object.keys(lookupTable)) {
-    const stopsList = Array.from(lookupTable[tripId]);
-    lookupTable[tripId] = stopsList;
+  for (const tripId of Object.keys(tripIdStopIdsLookup)) {
+    const stopsList = Array.from(tripIdStopIdsLookup[tripId]);
+    tripIdStopIdsLookup[tripId] = stopsList;
   }
 
-  return lookupTable;
+  return { tripIdStopIdsLookup, stopIdTripIdsLookup };
 }
 
 module.exports = {
