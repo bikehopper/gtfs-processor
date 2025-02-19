@@ -4,6 +4,7 @@ const { tmpdir } = require('node:os');
 const { unzipGtfs } = require('./gtfs-helpers');
 const { generateLocalTransitBounds } = require('./generate-local-transit-bounds');
 const { generateRouteLineClippingLookupTables } = require('./generate-route-line-clipping-lookup-tables');
+const { generateRouteTiles } = require('./generate-route-tiles');
 
 /*
  * This script generates two assets from the GTFS zip file. 
@@ -40,10 +41,18 @@ const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS 
   console.log(`Finished writing transit-service-area.json to: ${outputPath}`)
   
   // Generate route-line-lookup.json
-  await generateRouteLineClippingLookupTables(
+  const routelineLookups = await generateRouteLineClippingLookupTables(
     gtfsOutputPath,
     outputPath,
   );
 
   console.log(`Finished writing route-line-lookup.json to: ${outputPath}`)
+
+  await generateRouteTiles(
+    routelineLookups,
+    gtfsOutputPath,
+    outputPath,
+  );
+
+  console.log(`Finished writing /route-tiles to: ${outputPath}`)
 })();
