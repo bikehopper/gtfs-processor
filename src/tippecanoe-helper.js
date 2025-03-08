@@ -1,6 +1,18 @@
 const { spawn } = require('node:child_process');
 const shell = require('shelljs');
 
+
+/**
+ * Generates a vector tileset at `/tilesOutputPath` from the LDGeoJSON saved at `/inputLDGeoJsonPath`
+ * 
+ * @param {string} inputLDGeoJsonPath 
+ * @param {string} tilesOutputPath 
+ * @param {string} vectorLayerName 
+ * @param {number} minZoom 
+ * @param {boolean} shouldSimplifyLines 
+ * @param {boolean} dontDropPoints 
+ * @returns {Promise<void>} Resolves when the tileset generation is complete
+ */
 async function runTippecanoe(
   inputLDGeoJsonPath,
   tilesOutputPath,
@@ -29,7 +41,7 @@ async function runTippecanoe(
       proc.stdout.on('data', (data) => {
         console.log(`${data}`);
       });
-      
+      // Tippecanoe is weird and can write out normal logs to stderr (why idk!)
       proc.stderr.on('data', (data) => {
         console.log(`${data}`);
       });
