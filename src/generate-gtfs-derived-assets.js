@@ -1,10 +1,11 @@
 const { mkdtemp } = require('node:fs/promises');
-const { resolve, join } = require("path");
+const { resolve, join } = require('path');
 const { tmpdir } = require('node:os');
 const { unzipGtfs } = require('./gtfs-helpers');
 const { generateLocalTransitBounds } = require('./generate-local-transit-bounds');
 const { generateRouteLineClippingLookupTables } = require('./generate-route-line-clipping-lookup-tables');
 const { generateRouteTiles } = require('./generate-route-tiles');
+const { writeFile } = require('node:fs/promises');
 
 /*
  * This script generates two assets from the GTFS zip file. 
@@ -41,9 +42,18 @@ const ENV_MANUALLY_FILTERED_ROUTE_IDS = process.env.MANUALLY_FILTERED_ROUTE_IDS 
   console.log(`Finished writing transit-service-area.json to: ${outputPath}`)
   
   // Generate route-line-lookup.json
-  const routelineLookups = await generateRouteLineClippingLookupTables(
-    gtfsOutputPath,
-    outputPath,
+  const routelineLookups = await generateRouteLineClippingLookupTables(gtfsOutputPath);
+  const { routeTripShapeLookup, shapeIdLineStringLookup, tripIdStopIdsLookup } = routelineLookups;
+
+  // Write the JSON dictionaries to disk so we can use it in bikehopper-web-app at request time for fast lookups
+  await writeFile(
+    resolve(outputPath, 'route-line-lookup.json'),
+    JSON.stringify({
+      routeTripShapeLookup,
+      shapeIdLineStringLookup,
+      tripIdStopIdsLookup,
+    }),
+    'utf8',
   );
 
   console.log(`Finished writing route-line-lookup.json to: ${outputPath}`)

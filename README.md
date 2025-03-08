@@ -5,10 +5,10 @@ Ingests a static GTFS feed and outputs useful geoJSON files. It supports excludi
 #### Output Files
 * `transit-service-area.json`: A polygon that defines the area within which transit data is known.
 * `route-line-lookup.json`: Dictionaries used at runtime by `bikehopper-web-app`. 
-    1. stopTripShapeLookup: 
+    1. routeTripShapeLookup: 
         This is a two-level dictionary
         Level1 :
-            Key is a stop-id, Value is the 2nd Level dictionary
+            Key is a route-id, Value is the 2nd Level dictionary
         Level 2:
             Key is a trip-id, Value is a shape-id
     2. shapeIdLineStringLookup:

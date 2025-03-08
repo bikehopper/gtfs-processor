@@ -19,13 +19,13 @@ async function appendRouteLineStringToFile(
   ldGeoJsonPath,
   routelineLookups, 
 ) {
-  const { stopTripShapeLookup, shapeIdLineStringLookup } = routelineLookups;
+  const { routeTripShapeLookup, shapeIdLineStringLookup } = routelineLookups;
 
   const routeId = route['route_id'];
   const routeColor = route['route_color'];
   const routeTextColor = route['route_text_color'];
 
-  const trips = stopTripShapeLookup[routeId];
+  const trips = routeTripShapeLookup[routeId];
   if (trips) {
     const seenShapes = new Map();
     for (const tripId of Object.keys(trips)) {

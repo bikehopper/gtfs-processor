@@ -1,12 +1,11 @@
-const { writeFile } = require('node:fs/promises');
+;
 const { getRouteTripShapeLookup } = require('./get-route-id-trip-id-shape-id-lookup');
 const { getShapesLookup } = require('./get-shapes-lookup');
 const { getStopsForTripLookup } = require('./get-trip-id-stop-ids-lookup');
-const { resolve } = require("path");
 
 /**
  * Computes 3 lookup tables:
- * 1. stopTripShapeLookup: 
+ * 1. routeTripShapeLookup: 
  *    This is a two-level dictionary
  *    Level1 :
  *    Key is a stop-id, Value is the 2nd Level dictionary
@@ -17,26 +16,21 @@ const { resolve } = require("path");
  * 3. tripIdStopIdsLookup:
  *    Key is a trip-id, and value is an array of stop-ids for that trip
  *
- * stopTripShapeLookup and shapeIdLineStringLookup provide enough information to generate a LineString for a
+ * routeTripShapeLookup and shapeIdLineStringLookup provide enough information to generate a LineString for a
  * trip thats clipped between the entry and exit stops. 
  *
  * @param {string} unzippedGtfsPath path to unzipped gtfs text files
- * @param {string} outputPath path to directory in which generated file is dumped into
  * @return {Object} {
- *    stopTripShapeLookup: {<route-id, trip-id> : <shape-id>}, 
+ *    routeTripShapeLookup: {<route-id, trip-id> : <shape-id>}, 
  *    shapeIdLineStringLookup: {<shape-id> : <LineString>},
  *    tripIdStopIdsLookup: {<trip-id>: <stop-id[]>},
  *    tripRouteLookup: Map<<trip-id> : Set<route-id>>,
  *    stopIdTripIdsLookup: Map<<stop-id> : Set<<trip-id>>,
  * }
  */
-async function generateRouteLineClippingLookupTables(
-  unzippedGtfsPath,
-  outputPath,
-) {
-
+async function generateRouteLineClippingLookupTables(unzippedGtfsPath) {
   console.log('Starting build of routeline clipping tables');
-  const {routeTripShapeLookup: stopTripShapeLookup, tripRouteLookup} = await getRouteTripShapeLookup(unzippedGtfsPath);
+  const {routeTripShapeLookup, tripRouteLookup} = await getRouteTripShapeLookup(unzippedGtfsPath);
   console.log('Built <route-id, trip-id> : <shape-id> table');
 
   const shapeIdLineStringLookup = await getShapesLookup(unzippedGtfsPath);
@@ -45,19 +39,8 @@ async function generateRouteLineClippingLookupTables(
   const { tripIdStopIdsLookup, stopIdTripIdsLookup } = await getStopsForTripLookup(unzippedGtfsPath);
   console.log('Built <trip-id> : <stop-id[]> table');
 
-  // Write the JSON dictionaries to disk so we can use it in bikehopper-web-app at request time for fast lookups
-  await writeFile(
-    resolve(outputPath, 'route-line-lookup.json'),
-    JSON.stringify({
-      stopTripShapeLookup,
-      shapeIdLineStringLookup,
-      tripIdStopIdsLookup,
-    }),
-    'utf8',
-  );
-
   return {
-    stopTripShapeLookup,
+    routeTripShapeLookup,
     shapeIdLineStringLookup,
     tripIdStopIdsLookup,
     tripRouteLookup,

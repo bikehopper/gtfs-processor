@@ -26,7 +26,7 @@ async function runTippecanoe(
       reject(new Error('tippecanoe is not installed and available on PATH'));
     }
 
-    const params = ['-e', tilesOutputPath, '-l', vectorLayerName, '-P', `-Z${minZoom}`];
+    const params = ['-e', tilesOutputPath, '-l', vectorLayerName, '-P', `-Z${minZoom}`, '-U', 3];
     if (shouldSimplifyLines) {
       params.push('-S', '15');
     }
