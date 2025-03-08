@@ -42,12 +42,17 @@ Ingests a static GTFS feed and outputs useful geoJSON files. It supports excludi
         "maxzoom": 14,
         "fields": {
             // Encoding the types of modalities at the stop
-            "bus": "Boolean",
-            "cable": "Boolean",
-            "ferry": "Boolean",
-            "rail": "Boolean",
-            "tram": "Boolean"
-            "subway": "Boolean",
+            // Keys are taken from https://gtfs.org/documentation/schedule/reference/#routestxt
+            "tram": "Boolean", 
+            "subway": "Boolean", 
+            "rail": "Boolean", 
+            "bus": "Boolean", 
+            "ferry": "Boolean", 
+            "cable": "Boolean", 
+            "aerial": "Boolean", 
+            "funicular": "Boolean", 
+            "trolleybus": "Boolean",
+            "monorail": "Boolean",
 
             "stop_id": "String",
             "stop_name": "String",
