@@ -1,9 +1,9 @@
 const { createReadStream, existsSync } = require('node:fs');
 const { appendFile, unlink, rm } = require('node:fs/promises');
-const { resolve, join } = require("path");
+const { resolve, join } = require('path');
 const { parse } = require('csv-parse');
 const { lineString, point } = require('@turf/helpers');
-const shell = require('shelljs');
+const { runTippecanoe } = require('./tippecanoe-helper');
 
 
 /**
@@ -171,9 +171,6 @@ async function generateRouteTiles(
 
   console.log('Finished addings stop points to LDGeoJSON');
 
-  if (!shell.which('tippecanoe')) {
-    throw new Error('tippecanoe is not installed and available on PATH');
-  }
   const routeTilesPath = join(outputPath, 'route-tiles');
   if (existsSync(routeTilesPath)) {
     await rm(routeTilesPath, {recursive: true});
@@ -183,25 +180,11 @@ async function generateRouteTiles(
   if (existsSync(stopTilesPath)) {
     await rm(stopTilesPath, {recursive: true});
   }
-
-  const routeLinesCommand = `tippecanoe \
-   -e ${routeTilesPath} \
-   -l route-lines \
-   -P -Z7 -S 15 \
-   ${routeLinesLDGeoJsonPath}`;
-  const result = shell.exec(routeLinesCommand);
-  if (result.code !== 0) {
-    throw new Error('Tippecanoe failed to tile route-lines');
-  }
-
-  const stopsCommand = `tippecanoe \
-   -e ${stopTilesPath} \
-   -l stops \
-   -P -Z8 -r 0 -g 0 \
-   ${stopLDGeoJsonPath}`;
-  const stopsResult = shell.exec(stopsCommand);
-  if (stopsResult.code !== 0) {
-    throw new Error('Tippecanoe failed to tile stops');
+  try {
+    await runTippecanoe(routeLinesLDGeoJsonPath, routeTilesPath, 'route-lines', 7, true, false);
+    await runTippecanoe(stopLDGeoJsonPath, stopTilesPath, 'stops', 8, false, true);
+  } catch (e) {
+    throw e;
   }
 }
 
