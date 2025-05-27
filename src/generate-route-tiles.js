@@ -123,12 +123,10 @@ async function appendStops(stopsParser, ldGeoJsonPath, routeLineLookups, routeTy
         for (const routeType of routeTypesAtStop.values()) {
           properties[routeType] = true;
         }
-  
+
         const geojson = point([lon, lat], properties);
-  
+
         await appendFile(ldGeoJsonPath, JSON.stringify(geojson)+'\n');
-      } else {
-        console.log(`Dropped stop-id: ${stopId}, name: ${stopName} because no routes/trips were detected at the stop`);
       }
     }
   }
