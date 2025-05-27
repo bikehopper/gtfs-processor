@@ -1,6 +1,6 @@
-const { createReadStream } = require('node:fs');
-const { resolve } = require("path");
-const { parse } = require('csv-parse');
+import { createReadStream } from 'node:fs';
+import { resolve } from 'path';
+import { parse } from 'csv-parse';
 
 
 /**
@@ -13,7 +13,7 @@ const { parse } = require('csv-parse');
  *    stopIdTripIdsLookup: Map<<stop-id>, Set<trip-id>>
  * }
  */
-async function getStopsForTripLookup(unzippedGtfsPath){
+export default async function getStopsForTripLookup(unzippedGtfsPath){
   const stopTimesStream = createReadStream(resolve(unzippedGtfsPath, 'stop_times.txt'), {encoding: 'utf8'});
   const parser = stopTimesStream.pipe(parse({columns: true}));
   const tripIdStopIdsLookup = {};
@@ -44,7 +44,3 @@ async function getStopsForTripLookup(unzippedGtfsPath){
 
   return { tripIdStopIdsLookup, stopIdTripIdsLookup };
 }
-
-module.exports = {
-  getStopsForTripLookup,
-};

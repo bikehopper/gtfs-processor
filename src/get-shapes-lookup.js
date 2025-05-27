@@ -1,8 +1,8 @@
-const { createReadStream } = require('node:fs');
-const { resolve } = require("path");
-const { parse } = require('csv-parse');
+import { createReadStream } from 'node:fs';
+import { resolve } from 'path';
+import { parse } from 'csv-parse';
 
-async function getShapesLookup(unzippedGtfsPath) {
+export default async function getShapesLookup(unzippedGtfsPath) {
   const shapesStream = createReadStream(resolve(unzippedGtfsPath, 'shapes.txt'), {encoding: 'utf8'});
   const parser = shapesStream.pipe(parse({columns: true}));
 
@@ -32,7 +32,3 @@ async function getShapesLookup(unzippedGtfsPath) {
 
   return table;
 }
-
-module.exports = {
-  getShapesLookup,
-};

@@ -1,9 +1,9 @@
-const { createReadStream, existsSync } = require('node:fs');
-const { appendFile, unlink, rm } = require('node:fs/promises');
-const { resolve, join } = require('path');
-const { parse } = require('csv-parse');
-const { lineString, point } = require('@turf/helpers');
-const { runTippecanoe } = require('./tippecanoe-helper');
+import { createReadStream, existsSync } from 'node:fs';
+import { appendFile, unlink, rm } from 'node:fs/promises';
+import { resolve, join } from 'path';
+import { parse } from 'csv-parse';
+import { lineString, point } from '@turf/helpers';
+import { runTippecanoe } from './tippecanoe-helper.js';
 
 
 /**
@@ -132,7 +132,7 @@ async function appendStops(stopsParser, ldGeoJsonPath, routeLineLookups, routeTy
   }
 }
 
-async function generateRouteTiles(
+export default async function generateRouteTiles(
   routelineLookups,
   unzippedGtfsPath,
   outputPath,
@@ -185,7 +185,3 @@ async function generateRouteTiles(
     throw e;
   }
 }
-
-module.exports = {
-  generateRouteTiles,
-};

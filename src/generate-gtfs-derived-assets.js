@@ -1,11 +1,11 @@
-const { mkdtemp } = require('node:fs/promises');
-const { resolve, join } = require('path');
-const { tmpdir } = require('node:os');
-const { unzipGtfs } = require('./gtfs-helpers');
-const { generateLocalTransitBounds } = require('./generate-local-transit-bounds');
-const { generateRouteLineClippingLookupTables } = require('./generate-route-line-clipping-lookup-tables');
-const { generateRouteTiles } = require('./generate-route-tiles');
-const { writeFile } = require('node:fs/promises');
+import { mkdtemp } from 'node:fs/promises';
+import { resolve, join } from 'path';
+import { tmpdir } from 'node:os';
+import { writeFile } from 'node:fs/promises';
+import { unzipGtfs } from './gtfs-helpers.js';
+import generateLocalTransitBounds from './generate-local-transit-bounds.js';
+import generateRouteLineClippingLookupTables from './generate-route-line-clipping-lookup-tables.js';
+import generateRouteTiles from './generate-route-tiles.js';
 
 /*
  * This script generates two assets from the GTFS zip file. 

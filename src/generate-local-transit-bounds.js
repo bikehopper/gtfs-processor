@@ -1,9 +1,9 @@
-const { createReadStream } = require('node:fs');
-const { writeFile } = require('node:fs/promises');
-const turfConvex = require('@turf/convex').default;
-const turfBuffer = require('@turf/buffer').default;
-const { resolve } = require("path");
-const { filterRouteIds, filterTripIds, getInterestingStopIds, getInterestingStopsAsGeoJsonPoints } = require('./gtfs-helpers');
+import { createReadStream } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
+import turfConvex from '@turf/convex';
+import turfBuffer from '@turf/buffer';
+import { resolve } from 'path';
+import { filterRouteIds, filterTripIds, getInterestingStopIds, getInterestingStopsAsGeoJsonPoints } from './gtfs-helpers.js';
 
 /**
  * Computes a polygon to define the "transit service area". The
@@ -19,7 +19,7 @@ const { filterRouteIds, filterTripIds, getInterestingStopIds, getInterestingStop
  * @param {string} manuallyFilteredRouteIdsString  comma separated string of route ids
  * @param {string} boundsOutpoutPath Path to directory to output the generated data into
  */
-async function generateLocalTransitBounds(
+export default async function generateLocalTransitBounds(
   unzippedGtfsPath,
   filteredAgencyIdsString,
   manuallyFilteredRouteIdsString,
@@ -74,7 +74,3 @@ async function generateLocalTransitBounds(
   stopTimesReadableStream.close();
   stopsReadableStream.close();
 }
-
-module.exports = {
-  generateLocalTransitBounds,
-};

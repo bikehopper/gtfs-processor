@@ -1,8 +1,8 @@
-const { createReadStream } = require('node:fs');
-const { resolve } = require("path");
-const { parse } = require('csv-parse');
+import { createReadStream } from 'node:fs';
+import { resolve } from 'path';
+import { parse } from 'csv-parse';
 
-async function getRouteTripShapeLookup(unzippedGtfsPath) {
+export default async function getRouteTripShapeLookup(unzippedGtfsPath) {
   const tripsStream = createReadStream(resolve(unzippedGtfsPath, 'trips.txt'), {encoding: 'utf8'});
   const parser = tripsStream.pipe(parse({columns: true}));
 
@@ -31,7 +31,3 @@ async function getRouteTripShapeLookup(unzippedGtfsPath) {
 
   return {routeTripShapeLookup, tripRouteLookup};
 }
-
-module.exports = {
-  getRouteTripShapeLookup,
-};

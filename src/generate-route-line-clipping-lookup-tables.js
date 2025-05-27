@@ -1,7 +1,6 @@
-;
-const { getRouteTripShapeLookup } = require('./get-route-id-trip-id-shape-id-lookup');
-const { getShapesLookup } = require('./get-shapes-lookup');
-const { getStopsForTripLookup } = require('./get-trip-id-stop-ids-lookup');
+import getRouteTripShapeLookup from './get-route-id-trip-id-shape-id-lookup.js';
+import getShapesLookup from './get-shapes-lookup.js';
+import getStopsForTripLookup from './get-trip-id-stop-ids-lookup.js';
 
 /**
  * Computes 3 lookup tables:
@@ -28,7 +27,7 @@ const { getStopsForTripLookup } = require('./get-trip-id-stop-ids-lookup');
  *    stopIdTripIdsLookup: Map<<stop-id> : Set<<trip-id>>,
  * }
  */
-async function generateRouteLineClippingLookupTables(unzippedGtfsPath) {
+export default async function generateRouteLineClippingLookupTables(unzippedGtfsPath) {
   console.log('Starting build of routeline clipping tables');
   const {routeTripShapeLookup, tripRouteLookup} = await getRouteTripShapeLookup(unzippedGtfsPath);
   console.log('Built <route-id, trip-id> : <shape-id> table');
@@ -46,8 +45,4 @@ async function generateRouteLineClippingLookupTables(unzippedGtfsPath) {
     tripRouteLookup,
     stopIdTripIdsLookup,
   };
-};
-
-module.exports = {
-  generateRouteLineClippingLookupTables,
 };
