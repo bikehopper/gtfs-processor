@@ -6,7 +6,7 @@ import { closeDb, importGtfs, openDb } from 'gtfs';
 
 import generateLocalTransitBounds from './generate-local-transit-bounds.js';
 import generateRouteLineClippingLookupTables from './generate-route-line-clipping-lookup-tables.js';
-//import generateRouteTiles from './generate-route-tiles.js';
+import generateRouteTiles from './generate-route-tiles.js';
 
 /*
  * TODO Update this comment
@@ -33,7 +33,6 @@ const gtfsImportConfig = {
   agencies: [
     {
       path: gtfsFilePath,
-      exclude: ['shapes'], // TODO un-exclude shapes for later
     },
   ],
   sqlitePath,
@@ -68,7 +67,6 @@ await writeFile(
 
 console.log(`Finished writing route-line-lookup.json to: ${outputPath}`)
 
-/* TODO: Fix the below
 await generateRouteTiles(
   routelineLookups,
   gtfsDb,
@@ -76,5 +74,4 @@ await generateRouteTiles(
 );
 
 console.log(`Finished writing /route-tiles to: ${outputPath}`)
-*/
 closeDb(gtfsDb);
