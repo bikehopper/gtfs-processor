@@ -1,14 +1,14 @@
-import { createReadStream } from 'node:fs';
-import { resolve } from 'path';
-import { parse } from 'csv-parse';
+import { getShapes } from 'gtfs';
 
-export default async function getShapesLookup(unzippedGtfsPath) {
-  const shapesStream = createReadStream(resolve(unzippedGtfsPath, 'shapes.txt'), {encoding: 'utf8'});
-  const parser = shapesStream.pipe(parse({columns: true}));
-
+export default async function getShapesLookup() {
   const table = {};
 
-  for await(const shapeRow of parser) {
+  const shapeRows = getShapes(
+    {},
+    ['shape_id', 'shape_pt_lon', 'shape_pt_lat', 'shape_pt_sequence'],
+  );
+
+  for await(const shapeRow of shapeRows) {
     const shapeId = shapeRow['shape_id'];
     const lng = parseFloat(shapeRow['shape_pt_lon']);
     const lat = parseFloat(shapeRow['shape_pt_lat']);

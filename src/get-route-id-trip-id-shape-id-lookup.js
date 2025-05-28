@@ -1,16 +1,11 @@
-import { createReadStream } from 'node:fs';
-import { resolve } from 'path';
-import { parse } from 'csv-parse';
+import { getTrips } from 'gtfs';
 
-export default async function getRouteTripShapeLookup(unzippedGtfsPath) {
-  const tripsStream = createReadStream(resolve(unzippedGtfsPath, 'trips.txt'), {encoding: 'utf8'});
-  const parser = tripsStream.pipe(parse({columns: true}));
-
+export default async function getRouteTripShapeLookup() {
   const routeTripShapeLookup = {};
   // Using a Map for trip-id: route-id[] because this one doesn't need to be serialized to disk
   const tripRouteLookup = new Map();
 
-  for await(const trip of parser) {
+  for await (const trip of getTrips({}, ['route_id', 'trip_id', 'shape_id'])) {
     const routeId = trip['route_id'];
     const tripId = trip['trip_id'];
     const shapeId = trip['shape_id'];

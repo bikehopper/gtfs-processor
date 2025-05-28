@@ -18,7 +18,6 @@ import getStopsForTripLookup from './get-trip-id-stop-ids-lookup.js';
  * routeTripShapeLookup and shapeIdLineStringLookup provide enough information to generate a LineString for a
  * trip thats clipped between the entry and exit stops. 
  *
- * @param {gtfs db} gtfsDb GTFS DB
  * @return {Object} {
  *    routeTripShapeLookup: {<route-id, trip-id> : <shape-id>}, 
  *    shapeIdLineStringLookup: {<shape-id> : <LineString>},
@@ -27,16 +26,15 @@ import getStopsForTripLookup from './get-trip-id-stop-ids-lookup.js';
  *    stopIdTripIdsLookup: Map<<stop-id> : Set<<trip-id>>,
  * }
  */
-export default async function generateRouteLineClippingLookupTables(gtfsDb) {
-  // TODO modify below to use gtfsDb
+export default async function generateRouteLineClippingLookupTables() {
   console.log('Starting build of routeline clipping tables');
-  const {routeTripShapeLookup, tripRouteLookup} = await getRouteTripShapeLookup(unzippedGtfsPath);
+  const {routeTripShapeLookup, tripRouteLookup} = await getRouteTripShapeLookup();
   console.log('Built <route-id, trip-id> : <shape-id> table');
 
-  const shapeIdLineStringLookup = await getShapesLookup(unzippedGtfsPath);
+  const shapeIdLineStringLookup = await getShapesLookup();
   console.log('Built <shape-id> : <LineString> table');
 
-  const { tripIdStopIdsLookup, stopIdTripIdsLookup } = await getStopsForTripLookup(unzippedGtfsPath);
+  const { tripIdStopIdsLookup, stopIdTripIdsLookup } = await getStopsForTripLookup();
   console.log('Built <trip-id> : <stop-id[]> table');
 
   return {
