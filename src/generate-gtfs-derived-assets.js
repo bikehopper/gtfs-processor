@@ -9,8 +9,7 @@ import generateRouteLineClippingLookupTables from './generate-route-line-clippin
 import generateRouteTiles from './generate-route-tiles.js';
 
 /*
- * TODO Update this comment
- * This script generates two assets from the GTFS zip file. 
+ * This script generates several assets from the GTFS zip file.
  * These assets are used in bikehopper-web-app to expose some data from the GTFS files.
  * The assets are:
  *  1. transit-service-area.json: 
@@ -18,6 +17,9 @@ import generateRouteTiles from './generate-route-tiles.js';
  *  2. route-line-lookup.json:
  *     Lookup tables that provide easy lookups for locations of transit stops, 
  *     route LineString shapes, and extra information for clipping route LineStrings between two stops.
+ *  3. gtfs.db: a SQLite database with all the GTFS feed info.
+ *  4. route-tiles and stop-tiles: Map tiles for displaying route and stop
+ *     information.
  */
 
 const requiredGTFSFiles = new Set(['routes.txt', 'trips.txt', 'stop_times.txt', 'stops.txt', 'shapes.txt']);
@@ -69,8 +71,7 @@ console.log(`Finished writing route-line-lookup.json to: ${outputPath}`)
 
 await generateRouteTiles(
   routelineLookups,
-  gtfsDb,
-  outputPath,
+  outptPath,
 );
 
 console.log(`Finished writing /route-tiles to: ${outputPath}`)

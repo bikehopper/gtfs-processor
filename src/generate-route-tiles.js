@@ -135,10 +135,8 @@ async function appendStops(stops, ldGeoJsonPath, routeLineLookups, routeTypeLook
 
 export default async function generateRouteTiles(
   routelineLookups,
-  gtfsDb,
   outputPath,
 ) {
-  // TODO modify below to use gtfsDb
   const routeLinesLDGeoJsonPath = join(outputPath, 'routelines.ldgeojson');
   if (existsSync(routeLinesLDGeoJsonPath)) {
     await unlink(routeLinesLDGeoJsonPath);
