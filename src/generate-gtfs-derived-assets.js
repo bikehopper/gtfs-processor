@@ -71,7 +71,7 @@ console.log(`Finished writing route-line-lookup.json to: ${outputPath}`)
 
 await generateRouteTiles(
   routelineLookups,
-  outptPath,
+  outputPath,
 );
 
 console.log(`Finished writing /route-tiles to: ${outputPath}`)
