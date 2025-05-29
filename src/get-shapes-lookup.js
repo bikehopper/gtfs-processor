@@ -8,7 +8,7 @@ export default async function getShapesLookup() {
     ['shape_id', 'shape_pt_lon', 'shape_pt_lat', 'shape_pt_sequence'],
   );
 
-  for await(const shapeRow of shapeRows) {
+  for (const shapeRow of shapeRows) {
     const shapeId = shapeRow['shape_id'];
     const lng = parseFloat(shapeRow['shape_pt_lon']);
     const lat = parseFloat(shapeRow['shape_pt_lat']);

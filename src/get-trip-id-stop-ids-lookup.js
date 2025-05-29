@@ -13,7 +13,7 @@ export default async function getStopsForTripLookup() {
   const tripIdStopIdsLookup = {};
   // Don't need to serialize the <stop-id> : <trip-ids>[] lookup, so use a Map
   const stopIdTripIdsLookup = new Map();
-  for await (const stopTime of getStoptimes({}, ['stop_id', 'trip_id'])) {
+  for (const stopTime of getStoptimes({}, ['stop_id', 'trip_id'])) {
     const stopId = stopTime['stop_id'];
     const tripId = stopTime['trip_id'];
     if (tripId && stopId) {

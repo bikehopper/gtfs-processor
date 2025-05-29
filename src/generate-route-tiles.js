@@ -108,7 +108,7 @@ async function appendStops(stops, ldGeoJsonPath, routeLineLookups, routeTypeLook
     return routeTypes;
   };
 
-  for await(const stop of stops) {
+  for (const stop of stops) {
     const stopId = stop['stop_id'];
     const stopName = stop['stop_name'];
     const lat = parseFloat(stop['stop_lat']);
@@ -150,7 +150,7 @@ export default async function generateRouteTiles(
   console.log('Starting creation of LDGeoJSON');
   const routes = getRoutes();
   const routeTypes = new Map();
-  for await(const route of routes) {
+  for (const route of routes) {
     await appendRouteLineStringToFile(route, routeLinesLDGeoJsonPath, routelineLookups);
 
     const routeId = route['route_id'];
