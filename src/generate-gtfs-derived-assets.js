@@ -62,6 +62,7 @@ try {
 if (
   gtfsDbModificationTime == null
   || gtfsZipModificationTime >= gtfsDbModificationTime
+  || process.env.NODE_ENV === 'production'
 ) {
   console.log('Importing GTFS DB');
   await importGtfs(gtfsImportConfig);
